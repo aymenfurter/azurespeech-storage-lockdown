@@ -29,3 +29,4 @@ The script will verify security settings, fetch a Whisper model, trigger the tra
 - [Batch Transcription Audio Data](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/batch-transcription-audio-data?tabs=portal)
 - [Batch Transcription - Create](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/batch-transcription-create?pivots=rest-api)
 - [Batch Transcription - Get Results](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/batch-transcription-get?pivots=rest-api)
+- [Call Center OpenAI Analytics - Reference Architecture](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/openai/architecture/call-center-openai-analytics)
