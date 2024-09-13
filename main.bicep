@@ -1,21 +1,19 @@
 targetScope = 'resourceGroup'
 
 param location string = 'australiaeast'
-param storageAccountName string = 'sttranscriptiondemoae'
+param storageAccountName string = 'sttranscriptiondemoswn'
 param speechServiceName string = 'cogs-transcription-speech-ae'
 param storageAccountSku string = 'Standard_RAGRS'
 param storageAccountKind string = 'StorageV2'
 param speechServiceSku string = 'S0'
 param networkIp string = '<your-ip-address>'
-
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
-  location: location
+  location: 'switzerlandnorth'
   sku: {
     name: storageAccountSku
   }
   kind: storageAccountKind
-  tags: {}
   properties: {
     dnsEndpointType: 'Standard'
     defaultToOAuthAuthentication: false
@@ -35,7 +33,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
         }
       ]
       defaultAction: 'Deny'
-      resourceAccessRules: [
+            resourceAccessRules: [
         {
           tenantId: subscription().tenantId
           resourceId: resourceId('Microsoft.CognitiveServices/accounts', speechServiceName)
@@ -68,7 +66,6 @@ resource speechService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview'
     name: speechServiceSku
   }
   kind: 'SpeechServices'
-  tags: {}
   properties: {
     networkAcls: {
       defaultAction: 'Allow'
@@ -76,6 +73,11 @@ resource speechService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview'
       ipRules: []
     }
     publicNetworkAccess: 'Enabled'
+    userOwnedStorage: [
+      {
+        resourceId: storageAccount.id
+      }
+    ]
   }
   identity: {
     type: 'SystemAssigned'
@@ -92,6 +94,40 @@ resource audiofilesSourceContainer 'Microsoft.Storage/storageAccounts/blobServic
   name: 'audiofiles-source'
   properties: {
     publicAccess: 'None'
+  }
+}
+
+resource customspeechArtifactsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-04-01' = {
+  parent: blobService
+  name: 'customspeech-artifacts'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+resource customspeechModelsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-04-01' = {
+  parent: blobService
+  name: 'customspeech-models'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+resource customspeechAudiologsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-04-01' = {
+  parent: blobService
+  name: 'customspeech-audiologs'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+resource blobContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: storageAccount
+  name: guid(storageAccount.id, speechServiceName, 'blob-contributor')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe') // Blob Contributor role
+    principalId: speechService.identity.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -123,15 +159,5 @@ resource lifecyclePolicy 'Microsoft.Storage/storageAccounts/managementPolicies@2
         }
       ]
     }
-  }
-}
-
-resource blobContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: storageAccount
-  name: guid(storageAccount.id, 'cogs-transcription-speech-ae', 'blob-contributor')
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe') // Blob Contributor role
-    principalId: speechService.identity.principalId
-    principalType: 'ServicePrincipal'
   }
 }
